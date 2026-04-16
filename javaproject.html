@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Glass Currency Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-neon: #00d4ff;
+            --secondary-neon: #7000ff;
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* Animated Background Blobs */
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, var(--primary-neon), var(--secondary-neon));
+            filter: blur(80px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.3;
+            animation: move 20s infinite alternate;
+        }
+
+        @keyframes move {
+            from { transform: translate(-30%, -30%); }
+            to { transform: translate(30%, 30%); }
+        }
+
+        /* Main Card */
+        .converter-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 2.5rem;
+            width: 95%;
+            max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            font-weight: 700;
+        }
+
+        h1 span {
+            background: linear-gradient(to right, var(--primary-neon), var(--secondary-neon));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input, select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            outline: none;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: var(--primary-neon);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .selection-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .select-box {
+            flex: 1;
+        }
+
+        .select-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            padding: 0 10px;
+        }
+
+        .select-wrapper img {
+            width: 24px;
+            height: 18px;
+            border-radius: 2px;
+            object-fit: cover;
+        }
+
+        .select-wrapper select {
+            border: none;
+            background: transparent;
+        }
+
+        #swap-btn {
+            background: var(--primary-neon);
+            border: none;
+            width: 48px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--bg-dark);
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 24px;
+        }
+
+        #swap-btn:hover {
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 0 15px var(--primary-neon);
+        }
+
+        /* Result Area */
+        .result-area {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        #rate-info {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        #converted-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary-neon);
+            word-break: break-all;
+        }
+
+        /* Loader */
+        .loader {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--glass-border);
+            border-top: 3px solid var(--primary-neon);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 10px auto;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 400px) {
+            .selection-row { flex-direction: column; }
+            #swap-btn { margin-top: 0; transform: rotate(90deg); }
+            #swap-btn:hover { transform: rotate(270deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob"></div>
+
+    <main class="converter-card">
+        <h1>Global <span>Converter</span></h1>
+
+        <div class="input-group">
+            <label for="amount">Amount to Convert</label>
+            <input type="number" id="amount" value="1.00" step="0.01">
+        </div>
+
+        <div class="selection-row">
+            <div class="select-box">
+                <label>From</label>
+                <div class="select-wrapper">
+                    <img src="https://flagsapi.com/US/flat/64.png" alt="flag" id="from-flag">
+                    <select id="from-currency"></select>
+                </div>
+            </div>
+
+            <button id="swap-btn">
+                <i class="fas fa-right-left"></i>
+            </button>
+
+            <div class="select-box">
+                <label>To</label>
+                <div class="select-wrapper">
+                    <img src="https://flagsapi.com/EU/flat/64.png" alt="flag" id="to-flag">
+                    <select id="to-currency"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-area">
+            <div id="loader" class="loader"></div>
+            <div id="result-content">
+                <p id="rate-info">Fetching latest rates...</p>
+                <h2 id="converted-value">--</h2>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const currencyMap = {
+            "USD": "US", "EUR": "FR", "GBP": "GB", "JPY": "JP", "AUD": "AU", "CAD": "CA", 
+            "CHF": "CH", "CNY": "CN", "HKD": "HK", "NZD": "NZ", "SEK": "SE", "KRW": "KR", 
+            "SGD": "SG", "INR": "IN", "MXN": "MX", "BRL": "BR", "ZAR": "ZA", "TRY": "TR"
+        };
+
+        const fromSelect = document.getElementById('from-currency');
+        const toSelect = document.getElementById('to-currency');
+        const amountInput = document.getElementById('amount');
+        const resultText = document.getElementById('converted-value');
+        const rateInfo = document.getElementById('rate-info');
+        const loader = document.getElementById('loader');
+        const resultContent = document.getElementById('result-content');
+        const swapBtn = document.getElementById('swap-btn');
+
+        // Populate dropdowns
+        const init = () => {
+            Object.keys(currencyMap).forEach(cur => {
+                fromSelect.add(new Option(cur, cur));
+                toSelect.add(new Option(cur, cur));
+            });
+
+            fromSelect.value = "USD";
+            toSelect.value = "EUR";
+            convert();
+        };
+
+        // Core Conversion Logic
+        const convert = async () => {
+            const amount = amountInput.value;
+            const from = fromSelect.value;
+            const to = toSelect.value;
+
+            if (!amount || amount <= 0) {
+                resultText.innerText = "0.00";
+                return;
+            }
+
+            // UI State: Loading
+            loader.style.display = "block";
+            resultContent.style.opacity = "0.5";
+
+            try {
+                // Using Frankfurter API (No Key Required)
+                const res = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`);
+                
+                if (from === to) {
+                    updateUI(amount, 1, to);
+                } else {
+                    const data = await res.json();
+                    updateUI(data.rates[to], data.rates[to]/amount, to);
+                }
+            } catch (err) {
+                rateInfo.innerText = "Error: Check connection";
+                resultText.innerText = "Error";
+            } finally {
+                loader.style.display = "none";
+                resultContent.style.opacity = "1";
+            }
+        };
+
+        const updateUI = (total, rate, symbol) => {
+            rateInfo.innerText = `1 ${fromSelect.value} = ${rate.toFixed(4)} ${symbol}`;
+            resultText.innerText = `${parseFloat(total).toLocaleString()} ${symbol}`;
+        };
+
+        const updateFlag = (el, flagId) => {
+            const code = currencyMap[el.value];
+            document.getElementById(flagId).src = `https://flagsapi.com/${code}/flat/64.png`;
+        };
+
+        // Listeners
+        amountInput.addEventListener('input', convert);
+        
+        fromSelect.addEventListener('change', () => {
+            updateFlag(fromSelect, 'from-flag');
+            convert();
+        });
+
+        toSelect.addEventListener('change', () => {
+            updateFlag(toSelect, 'to-flag');
+            convert();
+        });
+
+        swapBtn.addEventListener('click', () => {
+            const temp = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = temp;
+            updateFlag(fromSelect, 'from-flag');
+            updateFlag(toSelect, 'to-flag');
+            convert();
+        });
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
